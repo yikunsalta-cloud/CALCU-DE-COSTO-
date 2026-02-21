@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Calculadora Pro</title>
+<title>Calculadora de Costos</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -45,10 +45,14 @@ from{opacity:0; transform:translateY(20px);}
 to{opacity:1; transform:translateY(0);}
 }
 
-h1{
+.logo-container{
 text-align:center;
-color:var(--morado);
 margin-bottom:20px;
+}
+
+.logo{
+max-width:160px;
+height:auto;
 }
 
 .card{
@@ -110,10 +114,6 @@ cursor:pointer;
 margin-top:8px;
 }
 
-.btn-add{
-background:var(--amarillo);
-}
-
 .btn-pdf{
 background:var(--rosa);
 color:white;
@@ -128,8 +128,8 @@ color:white;
 position:fixed;
 bottom:20px;
 right:20px;
-background:var(--rosa);
-color:white;
+background:var(--amarillo);
+color:#000;
 width:55px;
 height:55px;
 border-radius:50%;
@@ -148,7 +148,9 @@ cursor:pointer;
 
 <div class="app">
 
-<h1>Calculadora Pro</h1>
+<div class="logo-container">
+    <img src="logo.png" alt="Logo" class="logo">
+</div>
 
 <div id="productos"></div>
 
@@ -161,8 +163,8 @@ cursor:pointer;
 </div>
 
 <div class="card">
-<div class="card-title">Margen</div>
-<input type="number" id="margen" value="50" placeholder="Margen %">
+<div class="card-title">Margen %</div>
+<input type="number" id="margen" value="50">
 </div>
 
 <div class="resumen">
@@ -234,10 +236,17 @@ function generarPDF(){
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF();
 
-doc.setFontSize(18);
-doc.text("Resumen de Costos",20,20);
+const logo = new Image();
+logo.src = "logo.png";
 
-let y=35;
+logo.onload = function(){
+
+doc.addImage(logo, "PNG", 70, 10, 70, 30);
+
+doc.setFontSize(16);
+doc.text("Resumen de Costos", 20, 55);
+
+let y=70;
 
 let nombres = document.querySelectorAll(".card input[type='text']");
 let cantidades = document.querySelectorAll(".cantidad");
@@ -256,11 +265,14 @@ y+=8;
 
 y+=10;
 
+doc.setFontSize(14);
 doc.text("Costo Producción: " + document.getElementById("costoTotal").innerText,20,y);
 y+=8;
 doc.text("Precio Venta: " + document.getElementById("precioVenta").innerText,20,y);
 
 doc.save("cotizacion.pdf");
+
+};
 }
 
 </script>
