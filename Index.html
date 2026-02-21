@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Costos</title>
+
+<!-- Librería jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body{
+    background: linear-gradient(135deg, #FD39A2, #A43BCB, #84D4D8);
+    min-height:100vh;
+    padding:20px;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+}
+
+.logo{
+    text-align:center;
+    font-size:32px;
+    font-weight:bold;
+    color:white;
+    margin-bottom:30px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:25px;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:15px;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    margin-bottom:10px;
+    border:1px solid #ddd;
+    border-radius:8px;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:10px;
+}
+
+.btn-primary{
+    background:#FD39A2;
+    color:white;
+}
+
+.btn-secondary{
+    background:#A43BCB;
+    color:white;
+}
+
+.total-box{
+    background:#FCCE90;
+    padding:12px;
+    border-radius:8px;
+    margin-top:10px;
+    font-weight:bold;
+}
+
+.product-row{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr;
+    gap:10px;
+    margin-bottom:10px;
+}
+
+@media(max-width:768px){
+    .grid{
+        grid-template-columns:1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="logo">CALCULADORA DE COSTOS</div>
+
+<div class="grid">
+
+<!-- PANEL IZQUIERDO -->
+<div class="card">
+
+<h3>Resumen</h3>
+
+<label>Costo Producción</label>
+<div class="total-box" id="costoProduccion">$0.00</div>
+
+<label>Margen %</label>
+<input type="number" id="margen" value="50">
+
+<label>Precio Venta</label>
+<div class="total-box" id="precioVenta">$0.00</div>
+
+<button class="btn-secondary" onclick="generarPDF()">GENERAR PDF</button>
+
+</div>
+
+<!-- PANEL DERECHO -->
+<div class="card">
+
+<h3>Agregar Producto</h3>
+
+<div class="product-row">
+<input type="text" id="detalle" placeholder="Detalle">
+<input type="number" id="cantidad" value="1">
+<input type="number" id="precio" value="0">
+</div>
+
+<button class="btn-primary" onclick="agregarProducto()">AGREGAR PRODUCTO</button>
+
+<div id="listaProductos"></div>
+
+</div>
+
+</div>
+</div>
+
+<script>
+
+let productos = [];
+
+function agregarProducto(){
+
+    let detalle = document.getElementById("detalle").value;
+    let cantidad = parseFloat(document.getElementById("cantidad").value) || 0;
+    let precio = parseFloat(document.getElementById("precio").value) || 0;
+
+    if(detalle === "") return;
+
+    productos.push({detalle, cantidad, precio});
+
+    document.getElementById("detalle").value="";
+    document.getElementById("cantidad").value=1;
+    document.getElementById("precio").value=0;
+
+    renderProductos();
+}
+
+function renderProductos(){
+
+    let lista = document.getElementById("listaProductos");
+    lista.innerHTML="";
+
+    let total = 0;
+
+    productos.forEach((prod)=>{
+
+        let subtotal = prod.cantidad * prod.precio;
+        total += subtotal;
+
+        lista.innerHTML += `
+            <div class="total-box">
+                ${prod.detalle} | ${prod.cantidad} x $${prod.precio} = $${subtotal.toFixed(2)}
+            </div>
+        `;
+    });
+
+    document.getElementById("costoProduccion").innerText = "$" + total.toFixed(2);
+
+    calcularVenta();
+}
+
+function calcularVenta(){
+
+    let costo = productos.reduce((acc, p)=> acc + (p.cantidad * p.precio), 0);
+    let margen = parseFloat(document.getElementById("margen").value) || 0;
+
+    let precioFinal = costo + (costo * margen / 100);
+
+    document.getElementById("precioVenta").innerText = "$" + precioFinal.toFixed(2);
+}
+
+document.getElementById("margen").addEventListener("input", calcularVenta);
+
+function generarPDF(){
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("Resumen de Costos", 20, 20);
+
+    let y = 40;
+
+    productos.forEach(prod=>{
+        let subtotal = prod.cantidad * prod.precio;
+        doc.setFontSize(12);
+        doc.text(`${prod.detalle} - ${prod.cantidad} x $${prod.precio} = $${subtotal.toFixed(2)}`, 20, y);
+        y += 10;
+    });
+
+    y += 10;
+
+    let costo = productos.reduce((acc, p)=> acc + (p.cantidad * p.precio), 0);
+    let margen = parseFloat(document.getElementById("margen").value) || 0;
+    let precioFinal = costo + (costo * margen / 100);
+
+    doc.setFontSize(14);
+    doc.text(`Costo Producción: $${costo.toFixed(2)}`, 20, y);
+    y += 10;
+    doc.text(`Margen: ${margen}%`, 20, y);
+    y += 10;
+    doc.text(`Precio Venta: $${precioFinal.toFixed(2)}`, 20, y);
+
+    doc.save("resumen_costos.pdf");
+}
+
+</script>
+
+</body>
+  </html>
