@@ -175,7 +175,7 @@ Generar PDF
 <script>
 
 function formato(n){
-return "$ " + n.toLocaleString("es-AR");
+return "$ "+n.toLocaleString("es-AR");
 }
 
 function agregarProducto(){
@@ -223,7 +223,9 @@ totalMaterial+=c*p;
 }
 
 let tiempo=parseFloat(document.getElementById("tiempo").value)||0;
+
 let valorHora=parseFloat(document.getElementById("valorHora").value)||0;
+
 let tipo=document.getElementById("tipoTiempo").value;
 
 let horas=(tipo=="minutos")? tiempo/60 : tiempo;
@@ -241,6 +243,7 @@ let descuentoValor=parseFloat(document.getElementById("descuento").value)||0;
 let precioFinalCalc=precioMargen-(precioMargen*descuentoValor/100);
 
 document.getElementById("costoTotal").innerText=formato(costoProduccion);
+
 document.getElementById("precioFinal").innerText=formato(precioFinalCalc);
 
 }
@@ -256,11 +259,13 @@ const {jsPDF}=window.jspdf;
 let doc=new jsPDF();
 
 let hoy=new Date();
+
 let vencimiento=new Date();
 
 vencimiento.setDate(hoy.getDate()+5);
 
 let fecha=hoy.toLocaleDateString("es-AR");
+
 let valido=vencimiento.toLocaleDateString("es-AR");
 
 let logo=new Image();
@@ -271,19 +276,34 @@ logo.onload=function(){
 
 doc.setFont("helvetica","bold");
 
+// LOGO
 doc.addImage(logo,"PNG",60,10,90,40);
 
+// FECHA
 doc.setFontSize(12);
+doc.setTextColor(0,0,0);
 
 doc.text("Fecha: "+fecha,20,55);
 
+// VALIDEZ
+
 doc.setTextColor(200,0,0);
 
-doc.text("Valido hasta: "+valido,130,55);
+doc.text("Valido hasta: "+valido,20,63);
 
 doc.setTextColor(0,0,0);
 
-let y=70;
+
+// TITULO
+
+doc.setFontSize(16);
+
+doc.text("DETALLADO",20,80);
+
+let y=95;
+
+
+// PRODUCTOS
 
 let nombres=document.querySelectorAll(".nombre");
 let cantidades=document.querySelectorAll(".cantidad");
@@ -294,22 +314,37 @@ let totalMaterial=0;
 for(let i=0;i<cantidades.length;i++){
 
 let nombre=nombres[i].value||"Material";
+
 let cant=parseFloat(cantidades[i].value)||0;
+
 let costo=parseFloat(costos[i].value)||0;
 
 let subtotal=cant*costo;
 
 totalMaterial+=subtotal;
 
+doc.setFontSize(12);
+
 doc.text(nombre,20,y);
-doc.text("$"+subtotal.toLocaleString("es-AR"),170,y,{align:"right"});
+
+doc.text(
+"$"+subtotal.toLocaleString("es-AR"),
+170,
+y,
+{align:"right"}
+);
 
 y+=8;
 
 }
 
+
+// MANO OBRA
+
 let tiempo=parseFloat(document.getElementById("tiempo").value)||0;
+
 let valorHora=parseFloat(document.getElementById("valorHora").value)||0;
+
 let tipo=document.getElementById("tipoTiempo").value;
 
 let horas=(tipo=="minutos")? tiempo/60 : tiempo;
@@ -318,29 +353,76 @@ let manoObra=horas*valorHora;
 
 let costoProduccion=totalMaterial+manoObra;
 
+
 let margenValor=parseFloat(document.getElementById("margen").value)||0;
 
 let precioMargen=costoProduccion+(costoProduccion*margenValor/100);
+
 
 let descuentoValor=parseFloat(document.getElementById("descuento").value)||0;
 
 let precioFinalCalc=precioMargen-(precioMargen*descuentoValor/100);
 
+
 let sena=precioFinalCalc*0.5;
+
+
+// ABAJO DERECHA
 
 doc.setFontSize(14);
 
-doc.text("Costo Produccion:",120,240);
-doc.text("$"+costoProduccion.toLocaleString("es-AR"),200,240,{align:"right"});
+doc.text(
+"Costo Produccion:",
+120,
+240
+);
 
-doc.text("Seña 50%:",120,255);
-doc.text("$"+sena.toLocaleString("es-AR"),200,255,{align:"right"});
+doc.text(
+"$"+costoProduccion.toLocaleString("es-AR"),
+200,
+240,
+{align:"right"}
+);
 
-doc.setFontSize(28);
+
+doc.text(
+"Seña 50%:",
+120,
+255
+);
+
+doc.text(
+"$"+sena.toLocaleString("es-AR"),
+200,
+255,
+{align:"right"}
+);
+
+
+// TOTAL
+
+doc.setFontSize(18);
 
 doc.setTextColor(200,0,0);
 
-doc.text("$ "+precioFinalCalc.toLocaleString("es-AR"),200,285,{align:"right"});
+doc.text(
+"TOTAL FINAL",
+200,
+270,
+{align:"right"}
+);
+
+doc.setFontSize(32);
+
+doc.text(
+"$ "+precioFinalCalc.toLocaleString("es-AR"),
+200,
+285,
+{align:"right"}
+);
+
+
+// TEXTO FINAL
 
 doc.setFontSize(10);
 
@@ -353,6 +435,7 @@ doc.text(
 {align:"center"}
 );
 
+
 doc.save("Presupuesto.pdf");
 
 };
@@ -362,4 +445,4 @@ doc.save("Presupuesto.pdf");
 </script>
 
 </body>
-  </html>
+</html>
