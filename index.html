@@ -8,7 +8,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-
 :root{
 --amarillo:#FCCE90;
 --rosa:#FD39A2;
@@ -37,12 +36,6 @@ max-width:480px;
 border-radius:20px;
 padding:20px;
 box-shadow:0 15px 40px rgba(0,0,0,0.2);
-animation:fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn{
-from{opacity:0; transform:translateY(20px);}
-to{opacity:1; transform:translateY(0);}
 }
 
 .logo-container{
@@ -140,7 +133,6 @@ font-size:28px;
 box-shadow:0 5px 15px rgba(0,0,0,0.3);
 cursor:pointer;
 }
-
 </style>
 </head>
 
@@ -149,7 +141,7 @@ cursor:pointer;
 <div class="app">
 
 <div class="logo-container">
-    <img src="logo.png" alt="Logo" class="logo">
+<img src="logo.png" alt="Logo" class="logo">
 </div>
 
 <div id="productos"></div>
@@ -167,9 +159,15 @@ cursor:pointer;
 <input type="number" id="margen" value="50">
 </div>
 
+<div class="card">
+<div class="card-title">Descuento %</div>
+<input type="number" id="descuento" value="0" min="0">
+</div>
+
 <div class="resumen">
-<div><span>Costo Producción:</span><span id="costoTotal">$0.00</span></div>
-<div><span>Precio Venta:</span><span class="total" id="precioVenta">$0.00</span></div>
+<div><span>Costo Producción:</span><span id="costoTotal">$ 0 ARS</span></div>
+<div><span>Precio con Margen:</span><span id="precioMargen">$ 0 ARS</span></div>
+<div><span>Precio Final con Descuento:</span><span class="total" id="precioFinal">$ 0 ARS</span></div>
 </div>
 
 <button class="btn-pdf" onclick="generarPDF()">Generar PDF</button>
@@ -180,6 +178,10 @@ cursor:pointer;
 <div class="fab" onclick="agregarProducto()">+</div>
 
 <script>
+
+function formatoARS(valor){
+return "$ " + valor.toLocaleString("es-AR",{minimumFractionDigits:2}) + " ARS";
+}
 
 function agregarProducto(){
 const contenedor = document.getElementById("productos");
@@ -214,17 +216,20 @@ totalMateriales += cantidad * costo;
 
 let horas = parseFloat(document.getElementById("horas").value) || 0;
 let pagoHora = parseFloat(document.getElementById("pagoHora").value) || 0;
-
 let totalMO = horas * pagoHora;
 
 let costoProduccion = totalMateriales + totalMO;
 
-document.getElementById("costoTotal").innerText = "$" + costoProduccion.toFixed(2);
-
 let margen = parseFloat(document.getElementById("margen").value) || 0;
-let precioFinal = costoProduccion + (costoProduccion * margen / 100);
+let precioMargen = costoProduccion + (costoProduccion * margen / 100);
 
-document.getElementById("precioVenta").innerText = "$" + precioFinal.toFixed(2);
+let descuento = parseFloat(document.getElementById("descuento").value) || 0;
+let precioFinal = precioMargen - (precioMargen * descuento / 100);
+
+document.getElementById("costoTotal").innerText = formatoARS(costoProduccion);
+document.getElementById("precioMargen").innerText = formatoARS(precioMargen);
+document.getElementById("precioFinal").innerText = formatoARS(precioFinal);
+
 }
 
 document.addEventListener("input", calcular);
@@ -244,7 +249,7 @@ logo.onload = function(){
 doc.addImage(logo, "PNG", 70, 10, 70, 30);
 
 doc.setFontSize(16);
-doc.text("Resumen de Costos", 20, 55);
+doc.text("Resumen de Presupuesto", 20, 55);
 
 let y=70;
 
@@ -265,17 +270,19 @@ y+=8;
 
 y+=10;
 
-doc.setFontSize(14);
 doc.text("Costo Producción: " + document.getElementById("costoTotal").innerText,20,y);
 y+=8;
-doc.text("Precio Venta: " + document.getElementById("precioVenta").innerText,20,y);
+doc.text("Precio con Margen: " + document.getElementById("precioMargen").innerText,20,y);
+y+=8;
+doc.text("Precio Final con Descuento: " + document.getElementById("precioFinal").innerText,20,y);
 
-doc.save("cotizacion.pdf");
+doc.save("presupuesto_ARS.pdf");
 
 };
+
 }
 
 </script>
 
 </body>
-    </html>
+</html>
