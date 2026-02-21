@@ -10,61 +10,113 @@
 
 body{
 font-family: Arial;
-background:#f4f6f8;
 margin:0;
+background: linear-gradient(135deg,#FD39A2,#FCCE90);
 }
 
 .app{
-max-width:650px;
+max-width:900px;
 margin:30px auto;
-background:white;
 padding:25px;
-border-radius:20px;
-box-shadow:0px 5px 20px rgba(0,0,0,0.15);
+background:white;
+border-radius:25px;
+box-shadow:0px 10px 30px rgba(0,0,0,0.2);
 }
 
 .logo{
 text-align:center;
-margin-bottom:15px;
+margin-bottom:20px;
 }
 
 .logo img{
-height:70px;
+height:80px;
 }
 
 h2{
 text-align:center;
+color:#A43BCB;
 margin-bottom:20px;
-color:#1f3c88;
+}
+
+.tabla{
+width:100%;
+border-collapse:collapse;
+margin-bottom:20px;
+}
+
+.tabla th{
+
+background:#A43BCB;
+color:white;
+padding:12px;
+}
+
+.tabla td{
+
+padding:10px;
+border-bottom:1px solid #ddd;
+
 }
 
 input,select{
-width:100%;
-padding:10px;
-margin-bottom:10px;
+
+padding:8px;
 border-radius:8px;
 border:1px solid #ccc;
-font-size:15px;
+width:100%;
+
 }
 
 button{
-width:100%;
-padding:15px;
-background:#1f3c88;
-color:white;
+
 border:none;
+padding:14px;
 border-radius:10px;
-font-size:18px;
 cursor:pointer;
+font-size:16px;
 margin-top:10px;
+
+}
+
+.agregar{
+
+background:#84D4D8;
+width:100%;
+
+}
+
+.pdf{
+
+background:#FD39A2;
+color:white;
+width:100%;
+
+}
+
+.calcular{
+
+background:#A43BCB;
+color:white;
+width:100%;
+
+}
+
+.resumen{
+
+margin-top:20px;
+padding:20px;
+background:#FCCE90;
+border-radius:15px;
+
 }
 
 .total{
-font-size:22px;
-text-align:center;
-margin-top:15px;
-color:#d32f2f;
+
+font-size:28px;
+color:red;
 font-weight:bold;
+text-align:center;
+
 }
 
 </style>
@@ -78,93 +130,196 @@ font-weight:bold;
 <img src="logo.png">
 </div>
 
-<h2>Calculadora de Presupuesto</h2>
+<h2>Calculadora de Costos</h2>
 
-<input id="producto" placeholder="Nombre del producto">
 
-<input id="material" type="number" placeholder="Costo Material">
+<table class="tabla" id="tabla">
 
-<input id="cantidad" type="number" placeholder="Cantidad">
+<tr>
 
-<input id="costoHora" type="number" placeholder="Valor Hora">
+<th>Producto</th>
+<th>Cantidad</th>
+<th>Costo</th>
+<th>Subtotal</th>
+
+</tr>
+
+</table>
+
+<button class="agregar" onclick="agregarFila()">
+Agregar Articulo
+</button>
+
+
+<h3>Mano de Obra</h3>
+
+<input id="valorHora" placeholder="Valor Hora">
 
 <select id="tipoTiempo">
 <option value="hora">Horas</option>
 <option value="minuto">Minutos</option>
 </select>
 
-<input id="tiempo" type="number" placeholder="Tiempo Trabajo">
+<input id="tiempo" placeholder="Tiempo">
 
-<input id="produccion" type="number" placeholder="Costo Producción">
 
-<input id="descuento" type="number" value="0" placeholder="Descuento %">
+<h3>Produccion</h3>
 
-<button onclick="calcular()">Calcular</button>
+<input id="produccion" placeholder="Costo Produccion">
 
-<div class="total" id="resultado">
-Total: $0
+
+<h3>Descuento %</h3>
+
+<input id="descuento" value="0">
+
+
+<button class="calcular" onclick="calcular()">
+Calcular
+</button>
+
+
+<div class="resumen">
+
+Costo Producción:
+
+<div id="costoProduccion">$0</div>
+
+Seña 50%:
+
+<div id="sena">$0</div>
+
+<div class="total" id="totalFinal">
+$0
 </div>
 
-<button onclick="generarPDF()">Generar PDF</button>
+</div>
+
+
+<button class="pdf" onclick="generarPDF()">
+Generar PDF
+</button>
 
 </div>
+
 
 
 <script>
 
-let datosPDF={}
+agregarFila()
+agregarFila()
+
+
+function agregarFila(){
+
+let tabla=document.getElementById("tabla")
+
+let fila=tabla.insertRow(-1)
+
+fila.innerHTML=`
+
+<td><input class="producto"></td>
+
+<td><input class="cantidad" value="1"></td>
+
+<td><input class="precio"></td>
+
+<td class="subtotal">$0</td>
+
+`
+
+}
+
+
 
 function calcular(){
 
-let material=parseFloat(materialInput("material"))
-let cantidad=parseFloat(materialInput("cantidad"))
-let costoHora=parseFloat(materialInput("costoHora"))
-let tiempo=parseFloat(materialInput("tiempo"))
-let produccion=parseFloat(materialInput("produccion"))
-let descuento=parseFloat(materialInput("descuento"))
+let cantidades=document.querySelectorAll(".cantidad")
+let precios=document.querySelectorAll(".precio")
+let subtotales=document.querySelectorAll(".subtotal")
 
-let tipo=document.getElementById("tipoTiempo").value
+let totalMaterial=0
 
-if(tipo=="minuto"){
+
+for(let i=0;i<cantidades.length;i++){
+
+let c=parseFloat(cantidades[i].value)||0
+let p=parseFloat(precios[i].value)||0
+
+let s=c*p
+
+subtotales[i].innerHTML="$"+s
+
+totalMaterial+=s
+
+}
+
+
+let valorHora=parseFloat(valorHoraInput())||0
+let tiempo=parseFloat(tiempoInput())||0
+
+if(tipoTiempo.value=="minuto")
 tiempo=tiempo/60
+
+let manoObra=valorHora*tiempo
+
+
+let produccion=parseFloat(produccionInput())||0
+
+let subtotalGeneral=
+totalMaterial+manoObra+produccion
+
+
+let descuentoPor=parseFloat(descuentoInput())||0
+
+let descuentoMonto=
+subtotalGeneral*(descuentoPor/100)
+
+
+let totalFinal=
+subtotalGeneral-descuentoMonto
+
+
+document.getElementById("costoProduccion").innerHTML="$"+subtotalGeneral
+
+document.getElementById("sena").innerHTML="$"+(totalFinal/2).toFixed(0)
+
+document.getElementById("totalFinal").innerHTML=
+"$"+totalFinal.toFixed(0)
+
+
+window.totalPDF=totalFinal
+window.materialPDF=totalMaterial
+window.manoPDF=manoObra
+window.prodPDF=produccion
+window.descPDF=descuentoMonto
+window.descPorPDF=descuentoPor
+
 }
 
-let manoObra=costoHora*tiempo
 
-let subtotal=(material*cantidad)+manoObra+produccion
 
-let descuentoMonto=subtotal*(descuento/100)
-
-let total=subtotal-descuentoMonto
-
-document.getElementById("resultado").innerHTML=
-"Total: $"+total.toFixed(0)
-
-datosPDF={
-
-producto:document.getElementById("producto").value,
-material:material,
-cantidad:cantidad,
-manoObra:manoObra,
-produccion:produccion,
-descuento:descuentoMonto,
-descuentoPorcentaje:descuento,
-total:total
-
+function valorHoraInput(){
+return document.getElementById("valorHora").value
 }
 
+function tiempoInput(){
+return document.getElementById("tiempo").value
 }
 
-function materialInput(id){
-return document.getElementById(id).value||0
+function produccionInput(){
+return document.getElementById("produccion").value
+}
+
+function descuentoInput(){
+return document.getElementById("descuento").value
 }
 
 
 
 function generarPDF(){
 
-if(!datosPDF.total){
-alert("Primero calcular")
+if(!window.totalPDF){
+alert("Calcular primero")
 return
 }
 
@@ -189,52 +344,85 @@ valido.getDate()+"/"+
 valido.getFullYear()
 
 
-pdf.addImage("logo.png","PNG",70,5,70,25)
+pdf.addImage("logo.png","PNG",70,5,70,30)
 
 
 pdf.setFont("helvetica","bold")
 
-pdf.setFontSize(12)
-pdf.text("Fecha: "+fecha,15,40)
+pdf.text("Fecha: "+fecha,20,45)
 
-pdf.setTextColor(200,0,0)
-pdf.text("Valido hasta: "+fechaValida,15,48)
+pdf.setTextColor(255,0,0)
+
+pdf.text("Valido hasta: "+fechaValida,20,55)
 
 
 pdf.setTextColor(0,0,0)
 
-pdf.setFont("helvetica","bold")
-pdf.setFontSize(14)
-
-pdf.text("DETALLADO",15,65)
+pdf.text("DETALLADO",20,75)
 
 
-pdf.setFontSize(12)
-
-pdf.text("Producto: "+datosPDF.producto,15,75)
-
-pdf.text("Material: $"+datosPDF.material,15,85)
-
-pdf.text("Cantidad: "+datosPDF.cantidad,15,95)
-
-pdf.text("Mano de obra: $"+datosPDF.manoObra.toFixed(0),15,105)
+let y=90
 
 
-
-pdf.setFontSize(14)
-
-pdf.text("Costo Produccion: $"+datosPDF.produccion,130,230)
-
-pdf.text("Seña 50%: $"+(datosPDF.total/2).toFixed(0),130,240)
+let productos=document.querySelectorAll(".producto")
+let cantidades=document.querySelectorAll(".cantidad")
+let precios=document.querySelectorAll(".precio")
 
 
-pdf.setFontSize(28)
+for(let i=0;i<productos.length;i++){
 
-pdf.setTextColor(220,0,0)
+let nombre=productos[i].value
 
-pdf.text("Total Final",130,260)
+if(nombre!=""){
 
-pdf.text("$"+datosPDF.total.toFixed(0),130,275)
+let c=cantidades[i].value
+let p=precios[i].value
+
+let s=c*p
+
+pdf.text(
+nombre+" "+c+" x $"+p+" = $"+s,
+20,
+y)
+
+y+=10
+
+}
+
+}
+
+
+y+=20
+
+pdf.text(
+"Costo Produccion: $"+window.prodPDF,
+120,
+240)
+
+pdf.text(
+"Seña 50%: $"+(window.totalPDF/2).toFixed(0),
+120,
+250)
+
+pdf.text(
+"Descuento: $"+window.descPDF.toFixed(0),
+120,
+260)
+
+
+pdf.setFontSize(30)
+
+pdf.setTextColor(255,0,0)
+
+pdf.text(
+"TOTAL FINAL",
+110,
+280)
+
+pdf.text(
+"$"+window.totalPDF.toFixed(0),
+110,
+295)
 
 
 
@@ -244,7 +432,7 @@ pdf.setTextColor(0,0,0)
 
 pdf.text(
 "Este presupuesto es valido 5 dias desde la fecha de emision",
-15,
+20,
 285
 )
 
@@ -253,8 +441,8 @@ pdf.save("presupuesto.pdf")
 
 }
 
-
 </script>
+
 
 </body>
 </html>
