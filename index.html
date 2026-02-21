@@ -2,121 +2,112 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Calculadora Yikun</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Calculadora de Costos</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 
+:root{
+--amarillo:#FCCE90;
+--rosa:#FD39A2;
+--morado:#A43BCB;
+--celeste:#84D4D8;
+}
+
 body{
-font-family: Arial;
 margin:0;
-background: linear-gradient(135deg,#FD39A2,#FCCE90);
+background:linear-gradient(135deg,var(--rosa),var(--morado));
+font-family:Segoe UI;
+display:flex;
+justify-content:center;
+padding:20px;
 }
 
 .app{
-max-width:900px;
-margin:30px auto;
-padding:25px;
 background:white;
-border-radius:25px;
-box-shadow:0px 10px 30px rgba(0,0,0,0.2);
+max-width:480px;
+width:100%;
+border-radius:20px;
+padding:20px;
+box-shadow:0 10px 30px rgba(0,0,0,0.2);
 }
 
 .logo{
-text-align:center;
-margin-bottom:20px;
+width:170px;
+display:block;
+margin:auto;
+margin-bottom:15px;
 }
 
-.logo img{
-height:80px;
+.card{
+background:white;
+border-radius:15px;
+padding:15px;
+margin-bottom:15px;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
 }
 
-h2{
-text-align:center;
-color:#A43BCB;
-margin-bottom:20px;
-}
-
-.tabla{
-width:100%;
-border-collapse:collapse;
-margin-bottom:20px;
-}
-
-.tabla th{
-
-background:#A43BCB;
-color:white;
-padding:12px;
-}
-
-.tabla td{
-
-padding:10px;
-border-bottom:1px solid #ddd;
-
+.card-title{
+color:var(--rosa);
+font-weight:bold;
+margin-bottom:10px;
 }
 
 input,select{
-
+width:100%;
 padding:8px;
+margin-bottom:8px;
 border-radius:8px;
-border:1px solid #ccc;
-width:100%;
-
+border:1px solid #ddd;
 }
 
-button{
-
-border:none;
-padding:14px;
-border-radius:10px;
-cursor:pointer;
-font-size:16px;
-margin-top:10px;
-
-}
-
-.agregar{
-
-background:#84D4D8;
-width:100%;
-
-}
-
-.pdf{
-
-background:#FD39A2;
-color:white;
-width:100%;
-
-}
-
-.calcular{
-
-background:#A43BCB;
-color:white;
-width:100%;
-
+.row{
+display:flex;
+gap:8px;
 }
 
 .resumen{
-
-margin-top:20px;
-padding:20px;
-background:#FCCE90;
+background:var(--celeste);
+padding:15px;
 border-radius:15px;
-
 }
 
 .total{
-
-font-size:28px;
-color:red;
+font-size:22px;
 font-weight:bold;
-text-align:center;
+}
 
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:10px;
+margin-top:8px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.btn-pdf{
+background:var(--rosa);
+color:white;
+}
+
+.fab{
+position:fixed;
+bottom:20px;
+right:20px;
+width:55px;
+height:55px;
+border-radius:50%;
+background:var(--amarillo);
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:28px;
+cursor:pointer;
 }
 
 </style>
@@ -126,323 +117,326 @@ text-align:center;
 
 <div class="app">
 
-<div class="logo">
-<img src="logo.png">
-</div>
+<img src="logo.png" class="logo">
 
-<h2>Calculadora de Costos</h2>
+<div id="productos"></div>
 
-
-<table class="tabla" id="tabla">
-
-<tr>
-
-<th>Producto</th>
-<th>Cantidad</th>
-<th>Costo</th>
-<th>Subtotal</th>
-
-</tr>
-
-</table>
-
-<button class="agregar" onclick="agregarFila()">
-Agregar Articulo
-</button>
-
-
-<h3>Mano de Obra</h3>
-
-<input id="valorHora" placeholder="Valor Hora">
+<div class="card">
+<div class="card-title">Mano de Obra</div>
 
 <select id="tipoTiempo">
-<option value="hora">Horas</option>
-<option value="minuto">Minutos</option>
+<option value="horas">Horas</option>
+<option value="minutos">Minutos</option>
 </select>
 
-<input id="tiempo" placeholder="Tiempo">
+<input id="tiempo" type="number" placeholder="Cantidad">
+<input id="valorHora" type="number" placeholder="Valor por Hora">
 
+</div>
 
-<h3>Produccion</h3>
+<div class="card">
+<div class="card-title">Margen %</div>
+<input id="margen" value="50" type="number">
+</div>
 
-<input id="produccion" placeholder="Costo Produccion">
-
-
-<h3>Descuento %</h3>
-
-<input id="descuento" value="0">
-
-
-<button class="calcular" onclick="calcular()">
-Calcular
-</button>
-
+<div class="card">
+<div class="card-title">Descuento %</div>
+<input id="descuento" value="0" type="number">
+</div>
 
 <div class="resumen">
 
 Costo Producción:
+<span id="costoTotal">$0</span>
 
-<div id="costoProduccion">$0</div>
+<br><br>
 
-Seña 50%:
-
-<div id="sena">$0</div>
-
-<div class="total" id="totalFinal">
-$0
-</div>
+Precio Final:
+<span id="precioFinal" class="total">$0</span>
 
 </div>
 
-
-<button class="pdf" onclick="generarPDF()">
+<button class="btn-pdf" onclick="generarPDF()">
 Generar PDF
 </button>
 
 </div>
 
-
+<div class="fab" onclick="agregarProducto()">+</div>
 
 <script>
 
-agregarFila()
-agregarFila()
-
-
-function agregarFila(){
-
-let tabla=document.getElementById("tabla")
-
-let fila=tabla.insertRow(-1)
-
-fila.innerHTML=`
-
-<td><input class="producto"></td>
-
-<td><input class="cantidad" value="1"></td>
-
-<td><input class="precio"></td>
-
-<td class="subtotal">$0</td>
-
-`
-
+function formato(n){
+return "$ "+n.toLocaleString("es-AR");
 }
 
+function agregarProducto(){
+
+let cont=document.getElementById("productos");
+
+let card=document.createElement("div");
+
+card.className="card";
+
+card.innerHTML=`
+
+<div class="card-title">Material</div>
+
+<input class="nombre" placeholder="Nombre">
+
+<div class="row">
+
+<input class="cantidad" type="number" placeholder="Cantidad">
+
+<input class="costo" type="number" placeholder="Costo">
+
+</div>
+
+`;
+
+cont.appendChild(card);
+
+}
 
 
 function calcular(){
 
-let cantidades=document.querySelectorAll(".cantidad")
-let precios=document.querySelectorAll(".precio")
-let subtotales=document.querySelectorAll(".subtotal")
+let totalMaterial=0;
 
-let totalMaterial=0
-
+let cantidades=document.querySelectorAll(".cantidad");
+let costos=document.querySelectorAll(".costo");
 
 for(let i=0;i<cantidades.length;i++){
 
-let c=parseFloat(cantidades[i].value)||0
-let p=parseFloat(precios[i].value)||0
+let c=parseFloat(cantidades[i].value)||0;
+let p=parseFloat(costos[i].value)||0;
 
-let s=c*p
-
-subtotales[i].innerHTML="$"+s
-
-totalMaterial+=s
+totalMaterial+=c*p;
 
 }
 
+let tiempo=parseFloat(document.getElementById("tiempo").value)||0;
+let valorHora=parseFloat(document.getElementById("valorHora").value)||0;
+let tipo=document.getElementById("tipoTiempo").value;
 
-let valorHora=parseFloat(valorHoraInput())||0
-let tiempo=parseFloat(tiempoInput())||0
+let horas=(tipo=="minutos")? tiempo/60 : tiempo;
 
-if(tipoTiempo.value=="minuto")
-tiempo=tiempo/60
+let manoObra=horas*valorHora;
 
-let manoObra=valorHora*tiempo
+let costoProduccion=totalMaterial+manoObra;
 
+let margenValor=parseFloat(document.getElementById("margen").value)||0;
 
-let produccion=parseFloat(produccionInput())||0
+let precioMargen=costoProduccion+(costoProduccion*margenValor/100);
 
-let subtotalGeneral=
-totalMaterial+manoObra+produccion
+let descuentoValor=parseFloat(document.getElementById("descuento").value)||0;
 
+let precioFinalCalc=precioMargen-(precioMargen*descuentoValor/100);
 
-let descuentoPor=parseFloat(descuentoInput())||0
-
-let descuentoMonto=
-subtotalGeneral*(descuentoPor/100)
-
-
-let totalFinal=
-subtotalGeneral-descuentoMonto
-
-
-document.getElementById("costoProduccion").innerHTML="$"+subtotalGeneral
-
-document.getElementById("sena").innerHTML="$"+(totalFinal/2).toFixed(0)
-
-document.getElementById("totalFinal").innerHTML=
-"$"+totalFinal.toFixed(0)
-
-
-window.totalPDF=totalFinal
-window.materialPDF=totalMaterial
-window.manoPDF=manoObra
-window.prodPDF=produccion
-window.descPDF=descuentoMonto
-window.descPorPDF=descuentoPor
+document.getElementById("costoTotal").innerText=formato(costoProduccion);
+document.getElementById("precioFinal").innerText=formato(precioFinalCalc);
 
 }
 
+document.addEventListener("input",calcular);
 
-
-function valorHoraInput(){
-return document.getElementById("valorHora").value
-}
-
-function tiempoInput(){
-return document.getElementById("tiempo").value
-}
-
-function produccionInput(){
-return document.getElementById("produccion").value
-}
-
-function descuentoInput(){
-return document.getElementById("descuento").value
-}
-
+agregarProducto();
 
 
 function generarPDF(){
 
-if(!window.totalPDF){
-alert("Calcular primero")
-return
+const {jsPDF}=window.jspdf;
+
+let doc=new jsPDF();
+
+let hoy=new Date();
+let vencimiento=new Date();
+
+vencimiento.setDate(hoy.getDate()+5);
+
+let fecha=hoy.toLocaleDateString("es-AR");
+let valido=vencimiento.toLocaleDateString("es-AR");
+
+let logo=new Image();
+logo.src="logo.png";
+
+logo.onload=function(){
+
+doc.setFont("helvetica","bold");
+
+doc.addImage(logo,"PNG",65,10,80,35);
+
+
+doc.setFontSize(12);
+doc.setTextColor(0,0,0);
+
+doc.text("Fecha: "+fecha,20,55);
+
+doc.setTextColor(200,0,0);
+doc.text("Valido hasta: "+valido,20,63);
+
+doc.setTextColor(0,0,0);
+
+
+doc.setFontSize(16);
+doc.text("DETALLADO",20,80);
+
+doc.line(20,85,190,85);
+
+
+doc.setFontSize(12);
+
+doc.text("Producto",20,92);
+doc.text("Cant",120,92);
+doc.text("Costo",150,92);
+doc.text("Subtotal",190,92,{align:"right"});
+
+doc.line(20,95,190,95);
+
+
+let y=105;
+
+let nombres=document.querySelectorAll(".nombre");
+let cantidades=document.querySelectorAll(".cantidad");
+let costos=document.querySelectorAll(".costo");
+
+let totalMaterial=0;
+
+for(let i=0;i<cantidades.length;i++){
+
+let nombre=nombres[i].value||"Material";
+let cant=parseFloat(cantidades[i].value)||0;
+let costo=parseFloat(costos[i].value)||0;
+
+let subtotal=cant*costo;
+
+if(subtotal>0){
+
+totalMaterial+=subtotal;
+
+doc.text(nombre,20,y);
+
+doc.text(String(cant),125,y);
+
+doc.text("$"+costo.toLocaleString("es-AR"),150,y);
+
+doc.text(
+"$"+subtotal.toLocaleString("es-AR"),
+190,
+y,
+{align:"right"}
+);
+
+y+=8;
+
 }
 
-const { jsPDF } = window.jspdf;
-
-let pdf=new jsPDF()
-
-let hoy=new Date()
-
-let fecha=
-hoy.getDate()+"/"+
-(hoy.getMonth()+1)+"/"+
-hoy.getFullYear()
-
-let valido=new Date()
-
-valido.setDate(hoy.getDate()+5)
-
-let fechaValida=
-valido.getDate()+"/"+
-(valido.getMonth()+1)+"/"+
-valido.getFullYear()
-
-
-pdf.addImage("logo.png","PNG",70,5,70,30)
-
-
-pdf.setFont("helvetica","bold")
-
-pdf.text("Fecha: "+fecha,20,45)
-
-pdf.setTextColor(255,0,0)
-
-pdf.text("Valido hasta: "+fechaValida,20,55)
-
-
-pdf.setTextColor(0,0,0)
-
-pdf.text("DETALLADO",20,75)
-
-
-let y=90
-
-
-let productos=document.querySelectorAll(".producto")
-let cantidades=document.querySelectorAll(".cantidad")
-let precios=document.querySelectorAll(".precio")
-
-
-for(let i=0;i<productos.length;i++){
-
-let nombre=productos[i].value
-
-if(nombre!=""){
-
-let c=cantidades[i].value
-let p=precios[i].value
-
-let s=c*p
-
-pdf.text(
-nombre+" "+c+" x $"+p+" = $"+s,
-20,
-y)
-
-y+=10
-
 }
+
+
+let tiempo=parseFloat(document.getElementById("tiempo").value)||0;
+let valorHora=parseFloat(document.getElementById("valorHora").value)||0;
+let tipo=document.getElementById("tipoTiempo").value;
+
+let horas=(tipo=="minutos")? tiempo/60 : tiempo;
+
+let manoObra=horas*valorHora;
+
+let costoProduccion=totalMaterial+manoObra;
+
+
+let margenValor=parseFloat(document.getElementById("margen").value)||0;
+
+let precioMargen=costoProduccion+(costoProduccion*margenValor/100);
+
+
+let descuentoValor=parseFloat(document.getElementById("descuento").value)||0;
+
+let montoDescuento=precioMargen*(descuentoValor/100);
+
+let precioFinalCalc=precioMargen-montoDescuento;
+
+let sena=precioFinalCalc*0.5;
+
+
+doc.line(100,235,190,235);
+
+
+doc.setFontSize(12);
+
+doc.text("Costo Produccion:",120,245);
+
+doc.text(
+"$"+costoProduccion.toLocaleString("es-AR"),
+190,
+245,
+{align:"right"}
+);
+
+
+if(descuentoValor>0){
+
+doc.text("Descuento "+descuentoValor+"%:",120,255);
+
+doc.text(
+"-$"+montoDescuento.toLocaleString("es-AR"),
+190,
+255,
+{align:"right"}
+);
 
 }
 
 
-y+=20
+doc.text("Seña 50%:",120,265);
 
-pdf.text(
-"Costo Produccion: $"+window.prodPDF,
-120,
-240)
-
-pdf.text(
-"Seña 50%: $"+(window.totalPDF/2).toFixed(0),
-120,
-250)
-
-pdf.text(
-"Descuento: $"+window.descPDF.toFixed(0),
-120,
-260)
+doc.text(
+"$"+sena.toLocaleString("es-AR"),
+190,
+265,
+{align:"right"}
+);
 
 
-pdf.setFontSize(30)
+doc.setFontSize(18);
+doc.setTextColor(200,0,0);
 
-pdf.setTextColor(255,0,0)
+doc.text(
+"TOTAL DEL PEDIDO",
+190,
+280,
+{align:"right"}
+);
 
-pdf.text(
-"TOTAL FINAL",
-110,
-280)
+doc.setFontSize(32);
 
-pdf.text(
-"$"+window.totalPDF.toFixed(0),
-110,
-295)
-
+doc.text(
+"$ "+precioFinalCalc.toLocaleString("es-AR"),
+190,
+295,
+{align:"right"}
+);
 
 
-pdf.setFontSize(10)
+doc.setFontSize(10);
 
-pdf.setTextColor(0,0,0)
+doc.setTextColor(0,0,0);
 
-pdf.text(
+doc.text(
 "Este presupuesto es valido 5 dias desde la fecha de emision",
-20,
-285
-)
+105,
+305,
+{align:"center"}
+);
 
 
-pdf.save("presupuesto.pdf")
+doc.save("Presupuesto.pdf");
+
+};
 
 }
 
 </script>
 
-
 </body>
-</html>
+  </html>
