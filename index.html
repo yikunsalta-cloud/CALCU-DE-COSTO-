@@ -17,17 +17,13 @@
 --celeste:#84D4D8;
 }
 
-*{
-box-sizing:border-box;
-font-family:Segoe UI;
-}
-
 body{
 margin:0;
 background:linear-gradient(135deg,var(--rosa),var(--morado));
 display:flex;
 justify-content:center;
 padding:20px;
+font-family:Segoe UI;
 }
 
 .app{
@@ -39,13 +35,11 @@ padding:20px;
 box-shadow:0 10px 30px rgba(0,0,0,0.2);
 }
 
-.logo-container{
-text-align:center;
-margin-bottom:20px;
-}
-
 .logo{
 width:170px;
+display:block;
+margin:auto;
+margin-bottom:15px;
 }
 
 .card{
@@ -62,7 +56,7 @@ font-weight:bold;
 margin-bottom:10px;
 }
 
-input{
+input,select{
 width:100%;
 padding:8px;
 margin-bottom:8px;
@@ -73,10 +67,6 @@ border:1px solid #ddd;
 .row{
 display:flex;
 gap:8px;
-}
-
-.row input{
-flex:1;
 }
 
 .resumen{
@@ -105,11 +95,6 @@ background:var(--rosa);
 color:white;
 }
 
-.btn-print{
-background:var(--morado);
-color:white;
-}
-
 .fab{
 position:fixed;
 bottom:20px;
@@ -132,56 +117,57 @@ cursor:pointer;
 
 <div class="app">
 
-<div class="logo-container">
 <img src="logo.png" class="logo">
-</div>
 
 <div id="productos"></div>
 
 <div class="card">
-<div class="card-title">Mano de Obra</div>
 
-<div class="row">
-<input id="horas" type="number" placeholder="Horas">
-<input id="pagoHora" type="number" placeholder="Pago x Hora">
+<div class="card-title">
+Mano de Obra
 </div>
+
+<select id="tipoTiempo">
+<option value="horas">Horas</option>
+<option value="minutos">Minutos</option>
+</select>
+
+<input id="tiempo" type="number" placeholder="Cantidad">
+
+<input id="valorHora" type="number" placeholder="Valor por Hora">
 
 </div>
 
 <div class="card">
+
 <div class="card-title">Margen %</div>
 
-<input id="margen" type="number" value="50">
+<input id="margen" value="50" type="number">
 
 </div>
 
 <div class="card">
+
 <div class="card-title">Descuento %</div>
 
-<input id="descuento" type="number" value="0">
+<input id="descuento" value="0" type="number">
 
 </div>
 
 <div class="resumen">
 
-<div>
 Costo Producción:
 <span id="costoTotal">$0</span>
-</div>
 
-<div>
+<br><br>
+
 Precio Final:
 <span class="total" id="precioFinal">$0</span>
-</div>
 
 </div>
 
 <button class="btn-pdf" onclick="generarPDF()">
 Generar PDF
-</button>
-
-<button class="btn-print" onclick="window.print()">
-Imprimir
 </button>
 
 </div>
@@ -190,10 +176,8 @@ Imprimir
 
 <script>
 
-function formatoARS(n){
-
-return "$ " + n.toLocaleString("es-AR");
-
+function formato(n){
+return "$ "+n.toLocaleString("es-AR");
 }
 
 function agregarProducto(){
@@ -206,9 +190,7 @@ card.className="card";
 
 card.innerHTML=`
 
-<div class="card-title">
-Material
-</div>
+<div class="card-title">Material</div>
 
 <input placeholder="Nombre">
 
@@ -231,54 +213,47 @@ function calcular(){
 let totalMaterial=0;
 
 let cantidades=document.querySelectorAll(".cantidad");
-
 let costos=document.querySelectorAll(".costo");
 
 for(let i=0;i<cantidades.length;i++){
 
 let c=parseFloat(cantidades[i].value)||0;
-
 let p=parseFloat(costos[i].value)||0;
 
 totalMaterial+=c*p;
 
 }
 
-let horas=parseFloat(horasInput.value)||0;
+let tiempo=parseFloat(document.getElementById("tiempo").value)||0;
 
-let pago=parseFloat(pagoHora.value)||0;
+let valorHora=parseFloat(document.getElementById("valorHora").value)||0;
 
-let mo=horas*pago;
+let tipo=document.getElementById("tipoTiempo").value;
 
-let costoProduccion=totalMaterial+mo;
+let horas=tiempo;
 
-let margen=parseFloat(margenInput.value)||0;
+if(tipo=="minutos")
+horas=tiempo/60;
+
+let manoObra=horas*valorHora;
+
+let costoProduccion=totalMaterial+manoObra;
+
+let margen=parseFloat(margen.value)||0;
 
 let precioMargen=costoProduccion+(costoProduccion*margen/100);
 
-let descuento=parseFloat(descuentoInput.value)||0;
+let descuento=parseFloat(descuento.value)||0;
 
 let precioFinal=precioMargen-(precioMargen*descuento/100);
 
-costoTotal.innerText=formatoARS(costoProduccion);
+costoTotal.innerText=formato(costoProduccion);
 
-precioFinalSpan.innerText=formatoARS(precioFinal);
+precioFinal.innerText=formato(precioFinal);
 
 }
 
 document.addEventListener("input",calcular);
-
-let horasInput=document.getElementById("horas");
-
-let pagoHora=document.getElementById("pagoHora");
-
-let margenInput=document.getElementById("margen");
-
-let descuentoInput=document.getElementById("descuento");
-
-let costoTotal=document.getElementById("costoTotal");
-
-let precioFinalSpan=document.getElementById("precioFinal");
 
 agregarProducto();
 
@@ -286,16 +261,16 @@ function generarPDF(){
 
 const {jsPDF}=window.jspdf;
 
-const doc=new jsPDF();
+let doc=new jsPDF();
+
+doc.setFont("helvetica","bold"); // Arial Black similar
 
 let hoy=new Date();
-
 let vencimiento=new Date();
 
 vencimiento.setDate(hoy.getDate()+5);
 
 let fecha=hoy.toLocaleDateString("es-AR");
-
 let valido=vencimiento.toLocaleDateString("es-AR");
 
 let logo=new Image();
@@ -318,16 +293,8 @@ doc.setTextColor(0,0,0);
 
 let y=70;
 
-doc.setFontSize(14);
-
-doc.text("Materiales",20,y);
-
-y+=10;
-
-let nombres=document.querySelectorAll(".card input[type='text'], .card input[placeholder='Nombre']");
-
+let nombres=document.querySelectorAll("input[placeholder='Nombre']");
 let cantidades=document.querySelectorAll(".cantidad");
-
 let costos=document.querySelectorAll(".costo");
 
 let totalMaterial=0;
@@ -344,8 +311,6 @@ let subtotal=cant*costo;
 
 totalMaterial+=subtotal;
 
-doc.setFontSize(12);
-
 doc.text(nombre,20,y);
 
 doc.text("$"+subtotal.toLocaleString("es-AR"),170,y,{align:"right"});
@@ -354,61 +319,45 @@ y+=8;
 
 }
 
-let horas=parseFloat(horasInput.value)||0;
+let tiempo=parseFloat(document.getElementById("tiempo").value)||0;
+let valorHora=parseFloat(document.getElementById("valorHora").value)||0;
+let tipo=document.getElementById("tipoTiempo").value;
 
-let pago=parseFloat(pagoHora.value)||0;
+let horas=tipo=="minutos"?tiempo/60:tiempo;
 
-let mo=horas*pago;
+let manoObra=horas*valorHora;
 
-let costoProduccion=totalMaterial+mo;
+let costoProduccion=totalMaterial+manoObra;
 
-y+=10;
-
-doc.text("Costo Produccion:",20,y);
-
-doc.text("$"+costoProduccion.toLocaleString("es-AR"),170,y,{align:"right"});
-
-let margen=parseFloat(margenInput.value)||0;
+let margen=parseFloat(margen.value)||0;
 
 let precioMargen=costoProduccion+(costoProduccion*margen/100);
 
-let descuento=parseFloat(descuentoInput.value)||0;
+let descuento=parseFloat(descuento.value)||0;
 
 let precioFinal=precioMargen-(precioMargen*descuento/100);
 
-if(descuento>0){
-
-y+=10;
-
-doc.text("Descuento "+descuento+"%",20,y);
-
-doc.text("-$"+(precioMargen-precioFinal).toLocaleString("es-AR"),170,y,{align:"right"});
-
-}
-
 let sena=precioFinal*0.5;
-
-y+=15;
 
 doc.setFontSize(14);
 
-doc.text("Seña 50%",20,y);
+doc.text("Costo Produccion:",120,240);
 
-doc.text("$"+sena.toLocaleString("es-AR"),170,y,{align:"right"});
+doc.text("$"+costoProduccion.toLocaleString("es-AR"),200,240,{align:"right"});
 
-y+=20;
+doc.text("Seña 50%:",120,255);
 
-doc.setFontSize(22);
+doc.text("$"+sena.toLocaleString("es-AR"),200,255,{align:"right"});
+
+doc.setFontSize(26);
 
 doc.setTextColor(200,0,0);
 
-doc.text("TOTAL",105,y,{align:"center"});
+doc.text("TOTAL",105,270,{align:"center"});
 
-y+=10;
+doc.setFontSize(32);
 
-doc.setFontSize(28);
-
-doc.text("$ "+precioFinal.toLocaleString("es-AR"),105,y,{align:"center"});
+doc.text("$ "+precioFinal.toLocaleString("es-AR"),200,285,{align:"right"});
 
 doc.setFontSize(10);
 
@@ -417,7 +366,7 @@ doc.setTextColor(0,0,0);
 doc.text(
 "Este presupuesto es valido por 5 dias desde la fecha de emision",
 105,
-285,
+295,
 {align:"center"}
 );
 
